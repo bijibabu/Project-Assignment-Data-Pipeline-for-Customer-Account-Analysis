@@ -1,0 +1,56 @@
+-- Create external data source to point to the Silver container in Data Lake
+CREATE EXTERNAL DATA SOURCE SilverContainer
+WITH (
+TYPE = HADOOP,
+LOCATION = 'abfss://silver@<your_storage_account>.dfs.core.windows.net/'
+);
+
+-- Create external file format (parquet or delta) for Silver data
+CREATE EXTERNAL FILE FORMAT ParquetFileFormat
+WITH (
+FORMAT_TYPE = PARQUET
+);
+
+-- Create external table for the Silver container
+CREATE EXTERNAL TABLE CustomerAccountSilver
+(
+customer_id INT,
+customer_name NVARCHAR(100),
+account_id INT,
+balance DECIMAL(18, 2)
+)
+WITH (
+LOCATION = '/accounts/', -- Path to the data in the Silver container
+DATA_SOURCE = SilverContainer,
+FILE_FORMAT = ParquetFileFormat
+);
+
+-- Create external data source to point to the Gold container in Data Lake
+CREATE EXTERNAL DATA SOURCE GoldContainer
+WITH (
+TYPE = HADOOP,
+LOCATION = 'abfss://gold@<your_storage_account>.dfs.core.windows.net/'
+);
+
+-- Create external file format (parquet or delta) for Gold data
+CREATE EXTERNAL FILE FORMAT ParquetFileFormat
+WITH (
+FORMAT_TYPE = PARQUET
+);
+
+-- Create external table for the Gold container
+CREATE EXTERNAL TABLE CustomerBalanceGold
+(
+customer_id INT,
+customer_name NVARCHAR(100),
+total_balance DECIMAL(18, 2)
+)
+WITH (
+LOCATION = '/customer_total_balance/', -- Path to the data in the Gold container
+DATA_SOURCE = GoldContainer,
+FILE_FORMAT = ParquetFileFormat
+);
+
+SELECT * FROM CustomerAccountSilver;
+
+SELECT * FROM CustomerBalanceGold;
